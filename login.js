@@ -3,6 +3,7 @@ const { remote } = require('webdriverio');
 
 async function runLogin() {
 
+    // 디바이스 설정
     const capabilities = {
         platformName: 'Android',
         'appium:platformVersion': '13.0',
@@ -16,6 +17,7 @@ async function runLogin() {
         'appium:autoGrantPermissions': true,
     }
 
+    // 세선 스타트 옵션
     const driver = await remote({
         protocol: 'http',
         hostname: '127.0.0.1',
@@ -24,6 +26,7 @@ async function runLogin() {
         capabilities: capabilities,
     })
 
+    //테스트 스크립트
     try {
         // 로그인
         const loginBtn = await driver.$('//android.view.View[@content-desc="로그인"]').waitForExist({ timeout: 10000, interval: 3000 });
@@ -37,21 +40,7 @@ async function runLogin() {
         await log_Btn.click(); // 로그인 버튼 클릭
 
         // 튜토리얼 컨트롤
-        // await browser.action('pointer', {
-        //     parameters: { pointerType: 'touch' }
-        // })
-        // console.log('튜토리얼을 제어 합니다.')
-
-        // let count = 0;
-        // while (count < 10) {
-        //     await browser.touchAction([
-        //         { action: 'press', x: 700, y: 150 },
-        //         { action: 'release' }
-        //     ]);
-        // }
-        const waitMypage = await
-            driver.$('//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout[1]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View')
-                .waitForDisplayed(10000);
+        const waitMypage = await driver.$('//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout[1]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View').waitForDisplayed(10000);
         let t = 0;
         const maxTaps = 12;
         const screen = await driver.$('//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout[1]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View');
@@ -60,7 +49,7 @@ async function runLogin() {
         while (t <= maxTaps) {
             await screen.touchAction({ action: 'tap' });
             t++;
-            await sleep(1000); // 1초 대기
+            await sleep(1000);
         }
 
         // 로그아웃
@@ -71,7 +60,7 @@ async function runLogin() {
         await sleep(3000);
         const logoutChk = await (await driver.$('//android.view.View[@content-desc=\"로그인\"]')).getTagName();
         const chktext = '로그인';
-        if (chktext == logoutChk) {
+        if (chktext == logoutChk) { // 로그아웃 체크
             console.log('로그인 버튼이 확인 되었습니다.')
         } else console.log('로그인 버튼의 텍스트를 가져오지 못했습니다.')
 
