@@ -1,0 +1,6 @@
+{
+    "type": "commonjs",
+    "devDependencies": {
+        "webdriverio": "^8.29.1"
+    }
+}

@@ -1,108 +1,68 @@
-const wd = require('wd');
+const { sleep, setWaitTimeout, waitForElement } = require('wd/lib/commands');
+const { remote } = require('webdriverio');
 
-const appiumServer = 'http://localhost:4723/wd/hub';
+async function runLogin() {
 
-const seoltabAppPackage = 'com.seoltab.seoltab';
-const seoltabAppActivity = 'com.seoltab.seoltab.MainActivity';
-echo "# Appium_JS" >> README.md
-const desiredCaps = {
-    platformName: 'Android',
-    deviceName: 'R54W104V3QY',
-    appPackage: seoltabAppPackage,
-    appActivity: seoltabAppActivity,
-    ensureWebviewsHavePages: true,
-    nativeWebScreenshot: true,
-    newCommandTimeout: 3600,
-    connectHardwareKeyboard: true,
-    autoGrantPermissions: true
-};
-
-const driver = wd.promiseChainRemote(appiumServer);
-const wait = wd.promiseWebdriver.promise.waitForElement;
-
-const findById = (id) => driver.elementById(id);
-const findByXPath = (xpath) => driver.elementByXPath(xpath);
-const findByAccessibilityId = (accessibilityId) => driver.elementByAccessibilityId(accessibilityId);
-
-const testId = 'jaden_s1@seoltab.test';
-const testPw = 'asdfasdf';
-
-(async () => {
-    console.log('로그인/로그아웃 테스트를 시작합니다.');
-    console.log('테스트 계정 =', testId);
-
-    // 로그인
-    await wait(findByAccessibilityId('로그인'), 20000);
-    const logText = await findByAccessibilityId('로그인');
-    const chckText = await logText.text();
-    console.log(chckText, '페이지에 정상 접속하였습니다.');
-
-    const logId = await findByXPath('//android.view.View[@content-desc="이메일\n비밀번호"]/android.widget.EditText[1]');
-    await logId.click();
-    await logId.sendKeys(testId);
-
-    const logPw = await findByXPath('//android.view.View[@content-desc="이메일\n비밀번호"]/android.widget.EditText[2]');
-    await logPw.click();
-    await logPw.sendKeys(testPw);
-
-    await findByAccessibilityId('로그인').click();
-
-    // 튜토리얼 컨트롤
-    await wait(findByXPath('//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout[1]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View/android.widget.ImageView'), 20000);
-    console.log('로그인이 정상적으로 완료 되었습니다.');
-
-    const tutorialElemValues = ['1', '2', '3'];
-
-    try {
-        for (const tutorialElemValue of tutorialElemValues) {
-            const tutorialElem = await findById(tutorialElemValue);
-            const isTutorialExist = await tutorialElem.isDisplayed();
-            if (!isTutorialExist) {
-                throw new Error();
-            }
-            await driver.execute('mobile: tap', { x: 750, y: 130 });
-            console.log('과외 튜토리얼 확인');
-        }
-    } catch (error) {
-        console.error('error');
+    const capabilities = {
+        platformName: 'Android',
+        'appium:platformVersion': '13.0',
+        'appium:automationName': 'Appium',
+        'appium:app': '/Users/davekim/Developments/seoltab/build/app/outputs/flutter-apk/app-prod-release.apk',
+        'appium:deviceName': '1B826283-8FE6-4935-A10B-21940929D488',
+        'appium:ensureWebviewsHavePages': true,
+        'appium:nativeWebScreenshot': true,
+        'appium:newCommandTimeout': 3600,
+        'appium:connectHardwareKeyboard': true,
+        'appium:autoGrantPermissions': true,
     }
 
-    // 로그아웃
-    const gnbMy = await findByXPath('//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout[1]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View/android.widget.ImageView');
-    await gnbMy.click();
+    const driver = await remote({
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: 4723,
+        path: '/wd/hub',
+        capabilities: capabilities,
+    })
 
-    await wait(findById('com.seoltab.seoltab:id/tvLogout'), 20000);
-    const myLogout = await findById('com.seoltab.seoltab:id/tvLogout');
-    await myLogout.click();
+    try {
+        // 로그인
+        // await driver.waitForElement("xpath://android.view.View[@content-desc=\"이메일\n비밀번호\"]".isDisplayed, 10000, 100);
+        const log_Id = await driver.$("xpath://android.view.View[@content-desc=\"이메일\n비밀번호\"]");
+        await log_Id.waitForDisplayed();
+        await log_Id.click();
+        await log_Id.addValue("jaden_s1@seoltab.test"); // 로그인 아이디 입력
+        const log_Pw = await driver.$("xpath://android.view.View[@content-desc=\"이메일\n비밀번호\"]/android.widget.EditText[2]");
+        await log_Pw.click();
+        await log_Pw.addValue("asdfasdf"); // 로그인 패스워드 입력
+        const log_Btn = await driver.$("accessibility id:로그인");
+        await log_Btn.click(); // 로그인 버튼 클릭
 
-    await wait(findByAccessibilityId('로그인'), 20000);
-    const logTextLogout = await findByAccessibilityId('로그인');
-    const chckTextLogout = await logTextLogout.text();
-    console.log('정상적으로 로그아웃 하여', chckTextLogout, '페이지로 이동 하였습니다.');
-    console.log('로그인/로그아웃 테스트 완료');
+        // 튜토리얼 컨트롤
+        console.log('튜토리얼을 제어 합니다.')
+        let count = 0;
+        while (count < 10) {
+            await browser.touchAction([
+                { action: 'press', x: 700, y: 150 },
+                { action: 'release' }
+            ]);
+        }
 
-    await driver.quit();
+        // 로그아웃
+        const gnb_Mypage = await driver.$("xpath://android.widget.FrameLayout[@resource-id=\"android:id/content\"]/android.widget.FrameLayout[1]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View/android.widget.ImageView");
+        await gnb_Mypage.click(); // GNB 마이페이지 버튼 클릭
+        const mypage_logOut = await driver.$("id:com.seoltab.seoltab:id/tvLogout");
+        await mypage_logOut.click(); // 마이페이지 내 로그아웃 버튼 클릭
+        const logoutChk = document.getElementById("//android.view.View[@content-desc=\"로그인\"]")
+        const chktext = ('로그인');
+        if (chktext == logoutChk) {
+            console.log('로그아웃 되었습니다.')
+        }
 
-    console.log('OK. bye~');
-})();
+    } finally {
+        await driver.pause(1000);
+        console.log('로그인/로그아웃 테스트가 완료되었습니다.')
+        await driver.deleteSession();
+    }
+};
 
-const el1 = await driver.$("xpath://android.view.View[@content-desc=\"이메일\n비밀번호\"]/android.widget.EditText[1]");
-await el1.click();
-await el1.addValue("jaden_s1@seoltab.test");
-const el2 = await driver.$("xpath://android.view.View[@content-desc=\"이메일\n비밀번호\"]/android.widget.EditText[2]");
-await el2.click();
-await el2.addValue("asdfasdf");
-const el3 = await driver.$("accessibility id:로그인");
-await el3.click();
-const el4 = await driver.$("xpath://android.widget.FrameLayout[@resource-id=\"android:id/content\"]/android.widget.FrameLayout[1]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View");
-await el4.click();
-await el4.click();
-await el4.click();
-await el4.click();
-await el4.click();
-await el4.click();
-await el4.click();
-const el5 = await driver.$("xpath://android.widget.FrameLayout[@resource-id=\"android:id/content\"]/android.widget.FrameLayout[1]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View/android.widget.ImageView");
-await el5.click();
-const el6 = await driver.$("id:com.seoltab.seoltab:id/tvLogout");
-await el6.click();
+runLogin().catch(console.error);
